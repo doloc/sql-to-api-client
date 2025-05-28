@@ -4,7 +4,7 @@ export default function RegisterPage() {
   return (
     <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-1 lg:px-0">
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32">
+        <section className="w-full py-12 px-4 md:py-24 md:px-12 lg:py-32 lg:px-16">
           <div className="container grid items-center gap-6 px-4 md:px-6 lg:grid-cols-2 lg:gap-10">
             <div className="space-y-5">
               <div className="relative z-20 flex items-center text-lg font-semibold">
