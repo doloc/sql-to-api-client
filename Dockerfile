@@ -17,6 +17,9 @@ WORKDIR /home/node/app
 RUN npm cache clean --force &&  rm -rf node_modules && rm -f package-lock.json
 RUN npm install
 
+# Build the application
+RUN npm run build
+
 # Expose port
 EXPOSE 80
 # EXPOSE 3000
