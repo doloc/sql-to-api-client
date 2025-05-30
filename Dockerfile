@@ -22,5 +22,5 @@ EXPOSE 80
 # EXPOSE 3000
 
 # Start the app in debug mode so we can attach the debugger
-CMD ["npm", "run", "start", "--", "--host", "0.0.0.0", "--port", "80"]
+CMD ["npm", "run", "start", "--", "--port", "80"]
 # CMD ["npm", "run", "start", "--", "--host", "0.0.0.0", "--port", "3000"]
