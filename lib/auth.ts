@@ -79,26 +79,16 @@ export const useAuthStore = create<AuthState>()(
 );
 
 export async function loginWithCredentials(username: string, password: string): Promise<AuthResponse> {
-  const formData = new URLSearchParams();
-  formData.append('grant_type', 'password');
-  formData.append('client_id', process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'sql-to-api-client-app');
-  formData.append('username', username);
-  formData.append('password', password);
-
   try {
     const response = await axios.post<AuthResponse>(
-      `${process.env.NEXT_PUBLIC_KEYCLOAK_URL}/realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/protocol/openid-connect/token`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
+      '/api/auth/token',
+      { username, password },
+      { headers: { 'Content-Type': 'application/json' } }
     );
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.error_description || 'Authentication failed');
+      throw new Error((error.response?.data as any)?.error || 'Authentication failed');
     }
     throw error;
   }
