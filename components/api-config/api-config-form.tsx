@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ApiConfig } from '@/lib/types';
+import { DATABASE_SOURCES } from '@/lib/constants';
 
 const formSchema = z.object({
   apiPath: z.string().min(1, 'API path is required'),
@@ -131,7 +132,18 @@ export function ApiConfigForm({ initialData, onSubmit, onClose }: ApiConfigFormP
             <FormItem>
               <FormLabel>Database Source</FormLabel>
               <FormControl>
-                <Input placeholder="main_db" {...field} />
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn database" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DATABASE_SOURCES.map((source) => (
+                      <SelectItem key={source.value} value={source.value}>
+                        {source.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>

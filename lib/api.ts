@@ -10,7 +10,10 @@ const api = axios.create({
 
 // Add request interceptor to add auth token
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem('access_token');
+  const authStorage = typeof window !== 'undefined' ? localStorage.getItem('auth-storage') : null;
+  if (!authStorage) return config;
+  const parsed = JSON.parse(authStorage);
+  const token = parsed?.state?.token;
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -27,13 +30,15 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
+        const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
         const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
           refresh_token: refreshToken,
         });
 
-        const { access_token } = response.data;
-        localStorage.setItem('access_token', access_token);
+        const { access_token } = response.data as { access_token: string };
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('access_token', access_token);
+        }
 
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
@@ -41,8 +46,10 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         // Handle refresh token failure (e.g., redirect to login)
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+        }
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }

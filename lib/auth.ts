@@ -24,25 +24,54 @@ export const useAuthStore = create<AuthState>()(
       expiry: null,
       isAuthenticated: false,
       isHydrated: false,
-      login: (authResponse: AuthResponse) => set({
-        token: authResponse.access_token,
-        refreshToken: authResponse.refresh_token,
-        expiry: Date.now() + (authResponse.expires_in * 1000),
-        isAuthenticated: true,
+      login: (authResponse: AuthResponse) => set(() => {
+        const newState = {
+          token: authResponse.access_token,
+          refreshToken: authResponse.refresh_token,
+          expiry: Date.now() + (authResponse.expires_in * 1000),
+          isAuthenticated: true,
+        } as const;
+        try {
+          // Also set cookies so middleware can read auth state server-side
+          const expSeconds = Math.floor(newState.expiry / 1000);
+          document.cookie = `auth_token=${newState.token}; path=/; SameSite=Lax;`;
+          document.cookie = `auth_exp=${expSeconds}; path=/; SameSite=Lax;`;
+        } catch {}
+        return newState;
       }),
-      logout: () => set({
-        token: null,
-        refreshToken: null,
-        expiry: null,
-        isAuthenticated: false,
+      logout: () => set(() => {
+        try {
+          // Remove persisted Zustand storage as well
+          localStorage.removeItem('auth-storage');
+          // Clear cookies
+          document.cookie = 'auth_token=; Max-Age=0; path=/; SameSite=Lax;';
+          document.cookie = 'auth_exp=; Max-Age=0; path=/; SameSite=Lax;';
+        } catch {}
+        return {
+          token: null,
+          refreshToken: null,
+          expiry: null,
+          isAuthenticated: false,
+        };
       }),
       setHydrated: () => set({ isHydrated: true }),
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
-      skipHydration: true,
+      skipHydration: false,
       onRehydrateStorage: () => (state) => {
+        // After hydration, validate expiry and normalize auth state
+        try {
+          const current = useAuthStore.getState();
+          const hasExpired = typeof current.expiry === 'number' && current.expiry <= Date.now();
+          const hasToken = Boolean(current.token);
+          if (!hasToken || hasExpired) {
+            useAuthStore.getState().logout();
+          } else if (!current.isAuthenticated && hasToken && !hasExpired) {
+            useAuthStore.setState({ isAuthenticated: true });
+          }
+        } catch {}
         state?.setHydrated();
       },
     }
@@ -75,15 +104,4 @@ export async function loginWithCredentials(username: string, password: string): 
   }
 }
 
-// Initialize auth state from storage
-if (typeof window !== 'undefined') {
-  const stored = localStorage.getItem('auth-storage');
-  if (stored) {
-    try {
-      const { state } = JSON.parse(stored);
-      useAuthStore.setState(state);
-    } catch (e) {
-      localStorage.removeItem('auth-storage');
-    }
-  }
-}
+// Remove manual initialization to avoid double state races; rely on persist hydration above.

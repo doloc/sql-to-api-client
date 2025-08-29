@@ -9,7 +9,7 @@ export function LogoutButton() {
 
   const handleLogout = () => {
     // Clear any auth tokens or user data from localStorage
-    localStorage.removeItem('token')
+    localStorage.removeItem('auth-storage')
     // Redirect to login page
     router.push('/login')
   }
