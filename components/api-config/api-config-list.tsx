@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { ApiConfig } from '@/lib/types';
 import { ApiConfigTestDialog } from './api-config-test-dialog';
+import { ApiConfigCurlDialog } from './api-config-curl-dialog';
 
 interface ApiConfigListProps {
   configs: ApiConfig[];
@@ -37,6 +38,7 @@ export function ApiConfigList({
   const [methodFilter, setMethodFilter] = useState<string>('all');
   const [dbSourceFilter, setDbSourceFilter] = useState<string>('all');
   const [testingConfig, setTestingConfig] = useState<ApiConfig | undefined>();
+  const [curlConfig, setCurlConfig] = useState<ApiConfig | undefined>();
 
   const filteredConfigs = configs.filter((config) => {
     const matchesSearch = config.apiPath
@@ -136,6 +138,14 @@ export function ApiConfigList({
                   >
                     Test
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-green-600"
+                    onClick={() => setCurlConfig(config)}
+                  >
+                    cURL
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -148,6 +158,14 @@ export function ApiConfigList({
           config={testingConfig}
           open={!!testingConfig}
           onOpenChange={(open) => !open && setTestingConfig(undefined)}
+        />
+      )}
+
+      {curlConfig && (
+        <ApiConfigCurlDialog
+          config={curlConfig}
+          open={!!curlConfig}
+          onOpenChange={(open) => !open && setCurlConfig(undefined)}
         />
       )}
     </div>
